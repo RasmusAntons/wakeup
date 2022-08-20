@@ -1,0 +1,19 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	{% block page_head %}{% endblock %}
+</head>
+<body>
+<div id="navbar">
+	{% if user.is_authenticated %}
+		<span class="loggytext">— logged in as </span>{{ user.username }}
+	{% else %}
+		<span class="loggytext">— </span><a href="{% url 'login' %}">Log in</a>
+	{% endif %}
+</div>
+<div id="page_content">
+{% block page_content %}{% endblock %}
+</div>
+</body>
+</html>

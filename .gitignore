@@ -1,7 +1,7 @@
 *.iml
 .gradle
 /local.properties
-/android/.idea
+.idea
 .DS_Store
 /build
 /captures
@@ -9,3 +9,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+__pycache__/
+/server/db.sqlite3
+/server/wakeup-*.json

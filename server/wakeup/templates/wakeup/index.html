@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% load static %}
+{% block page_head %}
+	<title>Wake Up!</title>
+{% endblock %}
+{% block page_content %}
+	{% for other_user in users %}
+		<div>
+		<h5>{{ other_user.username }}</h5>
+		{% for device in user.devices.all %}
+			<div>
+			<a href="{% url 'wake' device.id %}"><h6>{{ device.name }}</h6></a>
+			</div>
+		{% endfor %}
+		</div>
+	{% endfor %}
+{% endblock %}
