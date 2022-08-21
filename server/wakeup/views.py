@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from django.http import Http404, HttpResponse
 from django.contrib.auth.decorators import permission_required, login_required
+from rest_framework import viewsets, permissions
 from .models import User, Device
+from .serializers import UserSerializer, DeviceSerializer
 from .forms import WakeForm
 from .fb_utils import wake_device
 
@@ -27,3 +29,15 @@ def wake(req, device_id: str):
     wake_form = WakeForm({'device_id': device_id})
     context = {'device': device, 'wake_form': wake_form}
     return render(req, 'wakeup/wake.html', context=context)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class DeviceViewSet(viewsets.ModelViewSet):
+    queryset = Device.objects.all()
+    serializer_class = DeviceSerializer
+    permission_classes = [permissions.IsAuthenticated]
