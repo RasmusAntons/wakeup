@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.media.AudioAttributes;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -74,6 +75,9 @@ public class FirebaseService extends FirebaseMessagingService {
         // Uri sound = RingtoneManager.getValidRingtoneUri(this);
         Uri sound = alarms.get((new Random()).nextInt(alarms.size()));
         Ringtone ringtone = RingtoneManager.getRingtone(this, sound);
+        ringtone.setAudioAttributes(new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build());
         ringtone.play();
     }
 
