@@ -1,8 +1,5 @@
 package de.rasmusantons.wakeup.ui.gallery;
 
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;

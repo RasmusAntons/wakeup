@@ -12,3 +12,4 @@ local.properties
 __pycache__/
 /server/db.sqlite3
 /server/wakeup-*.json
+server/oidc.pem

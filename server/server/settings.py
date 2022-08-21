@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-$i1m8%&$_yu#g)x@u2gxin6_vmfv#3)3em1yi3rgv$msk3kuqa
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['wakeup-dev.3po.ch']
 
 
 # Application definition
@@ -84,6 +84,23 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+
+CSRF_TRUSTED_ORIGINS = ['https://wakeup-dev.3po.ch']
+
+OAUTH2_PROVIDER = {
+    'OIDC_ENABLED': True,
+    'SCOPES': {
+        'openid': 'OpenID Connect scope',
+        'profile': 'Profile'
+    },
+    'OAUTH2_VALIDATOR_CLASS': 'server.oauth_validator.WakeupOAuth2Validator',
+    'ALLOWED_REDIRECT_URI_SCHEMES': ['https', 'de.rasmusantons.wakeup'],
+    'OIDC_ISS_ENDPOINT': 'https://wakeup-dev.3po.ch/o',
+}
+
+with open('oidc.pem') as oidc_keyfile:
+    OAUTH2_PROVIDER['OIDC_RSA_PRIVATE_KEY'] = oidc_keyfile.read()
 
 
 AUTH_USER_MODEL = 'wakeup.User'
