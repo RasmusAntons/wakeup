@@ -1,0 +1,24 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory app:title="@string/server_settings">
+
+        <EditTextPreference
+            app:key="wakeup_server_url"
+            app:title="@string/wakeup_server_url"
+            app:defaultValue="https://wakeup.3po.ch"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/alarm_settings">
+
+        <com.takisoft.preferencex.RingtonePreference
+            app:title="Alarm Sound"
+            app:key="@string/wakeup_alarm_sound"
+            android:dialogTitle="Alarm Sound"
+            android:ringtoneType="alarm" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

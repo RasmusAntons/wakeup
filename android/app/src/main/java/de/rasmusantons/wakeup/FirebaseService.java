@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.AudioAttributes;
 import android.media.Ringtone;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -30,7 +32,7 @@ import java.util.concurrent.Executors;
 public class FirebaseService extends FirebaseMessagingService {
     private static final String TAG = "FirebaseService";
 
-    public void testNotification() {
+    public void testNotification(String message) {
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(new OnCompleteListener<String>() {
                     @Override
@@ -55,10 +57,12 @@ public class FirebaseService extends FirebaseMessagingService {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "wakeup_channel")
                 .setSmallIcon(R.drawable.ic_menu_camera)
                 .setContentTitle("Wake Up!")
-                .setContentText("Aaaaaaaaaaaaaa")
+                .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
-                .setAutoCancel(true);
+                .setSilent(true)
+                .setAutoCancel(true)
+                .addAction(R.drawable.ic_menu_camera, "stop", pendingIntent);
 
         int notificationId = (int) SystemClock.uptimeMillis();
         nm.notify(notificationId, builder.build());
@@ -67,14 +71,10 @@ public class FirebaseService extends FirebaseMessagingService {
     private void testAlarm() {
         RingtoneManager rm = new RingtoneManager(this);
         rm.setType(RingtoneManager.TYPE_ALARM);
-        Cursor alarmCursor = rm.getCursor();
-        ArrayList<Uri> alarms = new ArrayList<>();
-        while (!alarmCursor.isAfterLast() && alarmCursor.moveToNext()) {
-            alarms.add(rm.getRingtoneUri(alarmCursor.getPosition()));
-        }
-
-        // Uri sound = RingtoneManager.getValidRingtoneUri(this);
-        Uri sound = alarms.get((new Random()).nextInt(alarms.size()));
+        Uri defaultAlarm = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_ALARM);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String soundStr = prefs.getString(getString(R.string.wakeup_alarm_sound), defaultAlarm.toString());
+        Uri sound = Uri.parse(soundStr);
         Ringtone ringtone = RingtoneManager.getRingtone(this, sound);
         ringtone.setAudioAttributes(new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
@@ -84,14 +84,15 @@ public class FirebaseService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
-        Log.d(TAG, "From: " + remoteMessage.getFrom());
+        String message = null;
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
+            message = remoteMessage.getData().get("message");
         }
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
         }
-        testNotification();
+        testNotification(message);
         testAlarm();
     }
 
