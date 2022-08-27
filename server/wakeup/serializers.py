@@ -2,13 +2,16 @@ from .models import User, Device
 from rest_framework import serializers
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['url', 'username', 'devices']
+        fields = ['id', 'username', 'devices']
 
 
-class DeviceSerializer(serializers.HyperlinkedModelSerializer):
+class DeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Device
-        fields = ['url', 'owner', 'name']
+        fields = ['id', 'owner', 'android_id', 'name', 'fb_token']
+        extra_kwargs = {
+            'fb_token': {'write_only': True}
+        }

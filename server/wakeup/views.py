@@ -41,3 +41,10 @@ class DeviceViewSet(viewsets.ModelViewSet):
     queryset = Device.objects.all()
     serializer_class = DeviceSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Device.objects.all()
+        for key in ('owner', 'name', 'android_id'):
+            if key in self.request.query_params:
+                queryset = queryset.filter(**{key: self.request.query_params.get(key)})
+        return queryset

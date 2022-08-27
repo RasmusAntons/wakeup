@@ -4,7 +4,7 @@ from . import views
 from .models import Device
 
 
-router = routers.DefaultRouter()
+router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'users', views.UserViewSet)
 router.register(r'devices', views.DeviceViewSet)
 
