@@ -25,6 +25,7 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.Executors;
 
 public class FirebaseService extends FirebaseMessagingService {
     private static final String TAG = "FirebaseService";
@@ -97,5 +98,17 @@ public class FirebaseService extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
         Log.d(TAG, "Refreshed token: " + token);
+        getSharedPreferences("firebase", MODE_PRIVATE).edit()
+                .putString("fb_token", token)
+                .putBoolean("fb_token_updated", true)
+                .apply();
+        if (LoginActivity.mAuthState != null) {
+            Executors.newSingleThreadExecutor().execute(() -> {
+                WakeupApi.updateFbToken(getApplicationContext(), token);
+                getSharedPreferences("firebase", MODE_PRIVATE).edit()
+                        .putBoolean("fb_token_updated", false)
+                        .apply();
+            });
+        }
     }
 }

@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.Menu;
 import android.widget.TextView;
@@ -13,7 +12,6 @@ import android.widget.TextView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
-import androidx.annotation.NonNull;
 import androidx.core.view.GravityCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -24,13 +22,16 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.json.JSONException;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import de.rasmusantons.wakeup.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
-    private static String TAG = "MainActivity";
+    private static final String TAG = "MainActivity";
 
     protected void login() {
         LoginActivity.deleteLogin(this);
@@ -49,8 +50,18 @@ public class MainActivity extends AppCompatActivity {
         binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, LoginActivity.mUserInfoJson.toString(), Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                ExecutorService executorService = Executors.newSingleThreadExecutor();
+                Handler handler = new Handler(Looper.getMainLooper());
+                executorService.execute(() -> {
+                    String fbToken = getSharedPreferences("firebase", MODE_PRIVATE)
+                            .getString("fb_token", null);
+                    Log.i(TAG, String.format("using fbToken: %s", fbToken));
+                    String ownDeviceId = WakeupApi.getOwnDeviceUrl(MainActivity.this, fbToken);
+                    handler.post(() -> {
+                        Snackbar.make(view, String.format("ownDeviceId=%s", ownDeviceId), Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
+                    });
+                });
             }
         });
         DrawerLayout drawer = binding.drawerLayout;
@@ -76,8 +87,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Log.i(TAG, "creating MainActivity, trying to restore login");
-        if (LoginActivity.mAuthState != null)
-            Log.i(TAG, "state: " + LoginActivity.mAuthState.jsonSerializeString());
         if (LoginActivity.restoreLogin(this)) {
             Log.i(TAG, "restored login");
             setUsername();

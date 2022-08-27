@@ -41,6 +41,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -55,7 +56,7 @@ public class LoginActivity extends AppCompatActivity {
 
     // The OAuth client ID. This is configured in your PingFederate administration console under OAuth Settings > Client Management.
     // The example "ac_client" from the OAuth playground can be used here.
-    private static final String OIDC_CLIENT_ID = "InE8VmenMp7z6uvDCf9eud3joSRBTS68ddiJWYfl";
+    private static final String OIDC_CLIENT_ID = "EQVoPEbNN4x9leJ2kjjIbSLRmWUTcMdANjVWtTOf";
 
     // The redirect URI that PingFederate will send the user back to after the authorization step. To avoid
     // collisions, this should be a reverse domain formatted string. You must define this in your OAuth client in PingFederate.
@@ -260,9 +261,8 @@ public class LoginActivity extends AppCompatActivity {
         Log.d(TAG, "Token request complete");
         mAuthState.update(tokenResponse, authException);
         if (tokenResponse != null) {
-            Log.d(TAG, "response: " + tokenResponse.jsonSerializeString());
-            SharedPreferences authPrefs =getSharedPreferences("auth", MODE_PRIVATE);
-            authPrefs.edit().putString(KEY_AUTH_STATE, tokenResponse.jsonSerializeString()).apply();
+            SharedPreferences authPrefs = getSharedPreferences("auth", MODE_PRIVATE);
+            authPrefs.edit().putString(KEY_AUTH_STATE, mAuthState.jsonSerializeString()).apply();
             this.getUserinfo();
         }
     }
@@ -299,10 +299,22 @@ public class LoginActivity extends AppCompatActivity {
                 Log.d(TAG, String.format("received userinfo: %s\n", jsonObject));
                 mUserInfoJson = jsonObject;
                 if (jsonObject != null) {
-                    SharedPreferences authPrefs =getSharedPreferences("auth", MODE_PRIVATE);
+                    SharedPreferences authPrefs = getSharedPreferences("auth", MODE_PRIVATE);
                     authPrefs.edit().putString(KEY_USER_INFO, jsonObject.toString()).apply();
-                    Log.i(TAG, "saved userInfo: " + jsonObject.toString());
                     authorizationLock.unlock();
+
+                    SharedPreferences firebasePreferences = getSharedPreferences("firebase", MODE_PRIVATE);
+                    if (firebasePreferences.getBoolean("fb_token_updated", false)) {
+                        String fbToken = firebasePreferences.getString("fb_token", null);
+                        Log.i(TAG, String.format("need to update firebase token: %s", fbToken));
+                        Executors.newSingleThreadExecutor().execute(() -> {
+                            WakeupApi.updateFbToken(LoginActivity.this, fbToken);
+                            firebasePreferences.edit()
+                                    .putBoolean("fb_token_updated", false)
+                                    .apply();
+                        });
+                    }
+
                     finish();
                 }
             }
@@ -345,7 +357,7 @@ public class LoginActivity extends AppCompatActivity {
                     Log.e(TAG, "Malformed authorization JSON saved", ex);
                 }
                 String userInfoJson = authPrefs.getString(KEY_USER_INFO, null);
-                Log.i(TAG, "found state: " + stateJson + userInfoJson);
+                Log.i(TAG, "found state");
                 if (userInfoJson != null) {
                     Log.i(TAG, "found user info: " + userInfoJson);
                     try {
