@@ -1,0 +1,33 @@
+{% extends 'base.html' %}{% load static %}
+
+{% block page_head %}
+	<title>Wake Up!</title>
+{% endblock %}
+
+{% block page_content %}
+	<div class="card mt-3 m-auto content-card">
+		<div class="card-body">
+			<h5 class="card-title">Alarms</h5>
+			<table class="table">
+			<thead>
+				<tr>
+					<th scope="col">created</th>
+					<th scope="col">from</th>
+					<th scope="col">to</th>
+					<th scope="col">status</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for alarm in user.alarms_all %}
+					<tr>
+						<td>{{ alarm.creation_time | date:'Y-m-d H:i:s' }}</td>
+						<td>{{ alarm.user.username }}</td>
+						<td>{{ alarm.target.username }}</td>
+						<td>{{ alarm.status_text }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+			</table>
+		</div>
+	</div>
+{% endblock %}

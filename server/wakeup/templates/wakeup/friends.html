@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% load django_bootstrap5 %}{% load static %}
+
+{% block page_head %}
+	<title>Wake Up! - Friends</title>
+	<script src="{% static 'jquery-3.6.1.min.js' %}"></script>
+	{{ add_friend_form.media.css }}
+	<style>
+	.select2-container .select2-selection--single {
+		height: 33px;
+	}
+	</style>
+{% endblock %}
+
+{% block page_content %}
+	<div class="card mt-3 m-auto content-card">
+		<div class="card-body">
+			<h5 class="card-title">Friends</h5>
+			<div class="list-group list-group-flush">
+				{% for friend in user.friends.all %}
+					<span class="list-group-item d-flex justify-content-between align-items-start">
+						{{ friend.username }}
+						<form method="post">
+							{% csrf_token %}
+							<input type="hidden" name="user" value="{{ friend.id }}">
+							<input class="btn btn-outline-danger btn-sm" type="submit" name="action" value="remove">
+						</form>
+					</span>
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+	<div class="card mt-3 m-auto content-card">
+		<div class="card-body">
+			<h5 class="card-title">Add</h5>
+			<form method="post">
+				{% csrf_token %}
+				{% bootstrap_form add_friend_form layout='inline' %}
+				<br>
+				{% bootstrap_button button_type='submit' name='action' value='add' content='add' %}
+			</form>
+			{{ add_friend_form.media.js }}
+		</div>
+	</div>
+{% endblock %}

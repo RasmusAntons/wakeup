@@ -1,19 +1,42 @@
-{% load static %}<!doctype html>
+{% load static %}{% load django_bootstrap5 %}<!doctype html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
+	<meta name="viewport" content="width=300, initial-scale=1">
+	{% bootstrap_css %}
+	{% bootstrap_javascript %}
+	<style>
+		.content-card {
+			 max-width: 800px;
+		}
+		.form-control {
+			margin-top: 5px;
+			margin-bottom: 5px;
+		}
+	</style>
 	{% block page_head %}{% endblock %}
 </head>
 <body>
-<div id="navbar">
-	{% if user.is_authenticated %}
-		<span class="loggytext">— logged in as </span>{{ user.username }}
-	{% else %}
-		<span class="loggytext">— </span><a href="{% url 'login' %}">Log in</a>
-	{% endif %}
-</div>
-<div id="page_content">
-{% block page_content %}{% endblock %}
+<div class="container">
+	<nav class="navbar navbar-expand-sm bg-light">
+		<div class="container-fluid">
+			<ul class="navbar-nav">
+				<li class="nav-item"><a class="navbar-brand">Wake Up!</a></li>
+				<li class="nav-item"><a class="nav-link{% if request.path == '/' %} active{% endif %}" href="{% url 'index' %}">home</a></li>
+				<li class="nav-item"><a class="nav-link{% if request.path == '/friends' %} active{% endif %}" href="{% url 'friends' %}">friends</a></li>
+				<li class="nav-item"><a class="nav-link{% if request.path == '/devices' %} active{% endif %}" href="{% url 'devices' %}">devices</a></li>
+				<li class="nav-item"><a class="nav-link{% if request.path == '/alarms' %} active{% endif %}" href="{% url 'alarms' %}">alarms</a></li>
+			</ul>
+			<ul class="navbar-nav">
+			{% if user.is_authenticated %}
+				<li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">logout {{ user.username }}</a></li>
+			{% else %}
+				<li class="nav-item"><a class="nav-link" href="{% url 'login' %}">login</a></li>
+			{% endif %}
+			</ul>
+		</div>
+	</nav>
+	{% block page_content %}{% endblock %}
 </div>
 </body>
 </html>

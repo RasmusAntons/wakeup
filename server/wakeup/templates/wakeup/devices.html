@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% load django_bootstrap5 %}
+
+{% block page_head %}
+	<title>Wake Up! - Devices</title>
+{% endblock %}
+
+{% block page_content %}
+	<div class="card mt-3 m-auto content-card">
+		<div class="card-body">
+			<h5 class="card-title">Devices</h5>
+
+			<div class="list-group list-group-flush">
+				{% for device in user.devices.all %}
+					<span class="list-group-item d-flex justify-content-between align-items-start">
+						{{ device.name }}
+						<form method="post">
+							{% csrf_token %}
+							<input type="hidden" name="device" value="{{ device.id }}">
+							{% if device.active %}
+								<input class="btn btn-outline-danger btn-sm" type="submit" name="action" value="deactivate">
+							{% else %}
+								<input class="btn btn-outline-success btn-sm" type="submit" name="action" value="activate">
+							{% endif %}
+							<input class="btn btn-outline-danger btn-sm" type="submit" name="action" value="delete">
+						</form>
+					</span>
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+{% endblock %}

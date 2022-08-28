@@ -1,10 +1,12 @@
 asgiref==3.5.2
 Django==4.1
 pip==22.2.2
-setuptools==65.1.1
+setuptools==65.3.0
 sqlparse==0.4.2
 wheel==0.37.1
 django-oauth-toolkit==2.1.0
 django-cors-headers==3.13.0
-firebase_admin==5.2.0
+firebase_admin==5.3.0
 djangorestframework==3.13.1
+django-bootstrap5==22.1
+django-select2==7.10

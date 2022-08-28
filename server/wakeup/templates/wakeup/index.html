@@ -1,16 +1,23 @@
 {% extends 'base.html' %}{% load static %}
+
 {% block page_head %}
 	<title>Wake Up!</title>
 {% endblock %}
+
 {% block page_content %}
-	{% for other_user in users %}
-		<div>
-		<h5>{{ other_user.username }}</h5>
-		{% for device in other_user.devices.all %}
-			<div>
-			<a href="{% url 'wake' device.id %}"><h6>{{ device.name }}</h6></a>
+	<div class="card mt-3 m-auto content-card">
+		<div class="card-body">
+			<h5 class="card-title">Wake Up!</h5>
+			<div class="list-group list-group-flush">
+				{% for friend in user.friends_reverse.all %}
+					{% with friend.active_devices as n %}
+					<a href="{% url 'send_alarm' friend.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start{% if not n %} disabled{% endif %}">
+						{{ friend.username }}
+						<span class="badge rounded-pill {% if n %}bg-info{% else %}bg-danger{% endif %}">{{ n }} active device{% if n != 1 %}s{% endif %}</span>
+					</a>
+					{% endwith %}
+				{% endfor %}
 			</div>
-		{% endfor %}
 		</div>
-	{% endfor %}
+	</div>
 {% endblock %}
