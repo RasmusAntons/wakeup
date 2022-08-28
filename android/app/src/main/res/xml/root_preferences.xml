@@ -4,8 +4,8 @@
     <PreferenceCategory app:title="@string/server_settings">
 
         <EditTextPreference
-            app:key="wakeup_server_url"
-            app:title="@string/wakeup_server_url"
+            app:key="@string/wakeup_server_url"
+            app:title="@string/wakeup_server_url_title"
             app:defaultValue="https://wakeup.3po.ch"
             app:useSimpleSummaryProvider="true" />
 

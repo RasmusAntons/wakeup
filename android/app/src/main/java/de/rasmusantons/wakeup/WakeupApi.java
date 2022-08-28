@@ -8,6 +8,7 @@ import android.provider.Settings;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.preference.PreferenceManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,15 +25,25 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
 
 public class WakeupApi {
     private static final String TAG = "WakeupApi";
+    private final Context context;
+    private final Uri baseUri;
+
+
+    public WakeupApi(Context context) {
+        this.context = context;
+        String wakeupServerUrl = PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(context.getString(R.string.wakeup_server_url), null);
+        baseUri = Uri.parse(wakeupServerUrl);
+    }
+
 
     @Nullable
-    private static String apiCall(URL url, String method, @Nullable String body) {
+    private String apiCall(URL url, String method, @Nullable String body) {
         try {
             if (LoginActivity.mAuthState == null)
                 return null;
@@ -76,17 +87,17 @@ public class WakeupApi {
     }
 
     @Nullable
-    private static String apiGet(URL url) {
+    private String apiGet(URL url) {
         return apiCall(url, "GET", null);
     }
 
     @Nullable
-    private static String apiPost(URL url, String body) {
+    private String apiPost(URL url, String body) {
         return apiCall(url, "POST", body);
     }
 
     @Nullable
-    private static JSONArray getJSONArray(URL url) {
+    private JSONArray getJSONArray(URL url) {
         String apiResponse = apiGet(url);
         if (apiResponse == null)
             return null;
@@ -99,17 +110,9 @@ public class WakeupApi {
     }
 
     @Nullable
-    public static List<JSONObject> getDevices(@Nullable String owner, @Nullable String androidId) {
+    public List<JSONObject> getDevices() {
         try {
-            Uri.Builder uriBuilder = new Uri.Builder()
-                    .scheme("https")
-                    .authority("wakeup-dev.3po.ch")  // todo: read from settings
-                    .appendPath("api")
-                    .appendPath("devices");
-            if (owner != null)
-                uriBuilder.appendQueryParameter("owner", owner);
-            if (androidId != null)
-                uriBuilder.appendQueryParameter("android_id", androidId);
+            Uri.Builder uriBuilder = baseUri.buildUpon().appendPath("api").appendPath("devices");
             URL devicesEndpoint = new URL(uriBuilder.toString());
             JSONArray devices = getJSONArray(devicesEndpoint);
             if (devices == null)
@@ -125,7 +128,7 @@ public class WakeupApi {
     }
 
     @Nullable
-    public static String registerNewDevice(String androidId, @Nullable String fbToken) {
+    public String registerNewDevice(String androidId, @Nullable String fbToken) {
         String ownUserId;
         try {
             ownUserId = LoginActivity.mUserInfoJson.getString("sub");
@@ -144,9 +147,7 @@ public class WakeupApi {
             e.printStackTrace();
             return null;
         }
-        Uri.Builder uriBuilder = new Uri.Builder()
-                .scheme("https")
-                .authority("wakeup-dev.3po.ch")  // todo: read from settings
+        Uri.Builder uriBuilder = baseUri.buildUpon()
                 .appendPath("api")
                 .appendPath("devices");
         try {
@@ -163,16 +164,10 @@ public class WakeupApi {
     }
 
     @Nullable
-    public static String getOwnDeviceUrl(Context context, @Nullable String fbToken) {
-        @SuppressLint("HardwareIds") String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-        String ownUserId;
-        try {
-            ownUserId = LoginActivity.mUserInfoJson.getString("sub");
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return null;
-        }
-        List<JSONObject> devices = getDevices(ownUserId, androidId);
+    public String getOwnDeviceUrl(@Nullable String fbToken) {
+        @SuppressLint("HardwareIds") String androidId =
+                Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+        List<JSONObject> devices = getDevices();
         if (devices == null || androidId == null)
             return null;
         try {
@@ -188,11 +183,9 @@ public class WakeupApi {
         return null;
     }
 
-    public static boolean updateFbToken(Context context, String fbToken) {
-        String ownDeviceId = getOwnDeviceUrl(context, fbToken);
-        Uri.Builder uriBuilder = new Uri.Builder()
-                .scheme("https")
-                .authority("wakeup-dev.3po.ch")  // todo: read from settings
+    public boolean updateFbToken(String fbToken) {
+        String ownDeviceId = getOwnDeviceUrl(fbToken);
+        Uri.Builder uriBuilder = baseUri.buildUpon()
                 .appendPath("api")
                 .appendPath("devices")
                 .appendPath(ownDeviceId);

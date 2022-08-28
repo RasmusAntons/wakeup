@@ -17,7 +17,7 @@
     <string name="alarm_settings">Alarm</string>
 
     <!-- Messages Preferences -->
-    <string name="wakeup_server_url">Wake Up! server URL</string>
+    <string name="wakeup_server_url_title">Wake Up! server URL</string>
     <string name="reply_title">Default reply action</string>
 
     <!-- Sync Preferences -->
@@ -27,4 +27,5 @@
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="wakeup_alarm_sound">wakeup_alarm_sound</string>
+    <string name="wakeup_server_url">wakeup_server_url</string>
 </resources>

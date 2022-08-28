@@ -5,8 +5,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.View;
-import android.view.Menu;
 import android.widget.TextView;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -54,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
                 String fbToken = getSharedPreferences("firebase", MODE_PRIVATE)
                         .getString("fb_token", null);
                 Log.i(TAG, String.format("using fbToken: %s", fbToken));
-                String ownDeviceId = WakeupApi.getOwnDeviceUrl(MainActivity.this, fbToken);
+                String ownDeviceId = (new WakeupApi(MainActivity.this)).getOwnDeviceUrl(fbToken);
                 handler.post(() -> {
                     Snackbar.make(view, String.format("ownDeviceId=%s", ownDeviceId), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
@@ -115,13 +113,6 @@ public class MainActivity extends AppCompatActivity {
             }
             navHeaderSubtitle.setText(R.string.nav_header_subtitle);
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
     }
 
     @Override

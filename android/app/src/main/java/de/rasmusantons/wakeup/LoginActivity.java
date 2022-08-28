@@ -308,7 +308,7 @@ public class LoginActivity extends AppCompatActivity {
                         String fbToken = firebasePreferences.getString("fb_token", null);
                         Log.i(TAG, String.format("need to update firebase token: %s", fbToken));
                         Executors.newSingleThreadExecutor().execute(() -> {
-                            WakeupApi.updateFbToken(LoginActivity.this, fbToken);
+                            (new WakeupApi(LoginActivity.this)).updateFbToken(fbToken);
                             firebasePreferences.edit()
                                     .putBoolean("fb_token_updated", false)
                                     .apply();

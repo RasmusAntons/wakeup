@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.media.AudioAttributes;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -25,8 +24,6 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import java.util.ArrayList;
-import java.util.Random;
 import java.util.concurrent.Executors;
 
 public class FirebaseService extends FirebaseMessagingService {
@@ -105,7 +102,7 @@ public class FirebaseService extends FirebaseMessagingService {
                 .apply();
         if (LoginActivity.mAuthState != null) {
             Executors.newSingleThreadExecutor().execute(() -> {
-                WakeupApi.updateFbToken(getApplicationContext(), token);
+                (new WakeupApi(getApplicationContext())).updateFbToken(token);
                 getSharedPreferences("firebase", MODE_PRIVATE).edit()
                         .putBoolean("fb_token_updated", false)
                         .apply();
