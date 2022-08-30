@@ -48,7 +48,7 @@ class Device(models.Model):
 
 class Alarm(models.Model):
     class Meta:
-        ordering = ['creation_time']
+        ordering = ['-creation_time']
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='alarms_outgoing', editable=False)
@@ -73,7 +73,11 @@ class Alarm(models.Model):
     def post_create(cls, sender, instance, created, *args, **kwargs):
         if not created:
             return
-        send_alarm_to_user(instance.target, instance)
+        if send_alarm_to_user(instance.target, instance):
+            instance.status = Alarm.Status.SENT
+        else:
+            instance.status = Alarm.Status.FAILED
+        instance.save()
 
 
 post_save.connect(Alarm.post_create, sender=Alarm)

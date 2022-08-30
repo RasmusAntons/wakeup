@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "drf_spectacular",
     "django_select2",
     "oauth2_provider",
     "corsheaders",
@@ -100,7 +101,15 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-    )
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'WakeUp! API',
+    'DESCRIPTION': 'Send alarms to other people.',
+    'VERSION': '0.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 
