@@ -16,9 +16,19 @@ public class FirebaseService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         String message = null;
+        final String alarmId;
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             message = remoteMessage.getData().get("message");
+            alarmId = remoteMessage.getData().get("alarm");
+        } else {
+            alarmId = null;
+        }
+        if (alarmId != null) {
+            Log.i(TAG, String.format("Updating alarm status of %s to %d", alarmId, WakeupApi.AlarmStatus.RECEIVED.value));
+            Executors.newSingleThreadExecutor().execute(() ->
+                    (new WakeupApi(getApplicationContext()))
+                            .updateAlarmStatus(alarmId, WakeupApi.AlarmStatus.RECEIVED));
         }
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
@@ -26,6 +36,7 @@ public class FirebaseService extends FirebaseMessagingService {
         Intent alarmIntent = new Intent(getBaseContext(), AlarmService.class);
         alarmIntent.putExtra("action", AlarmService.Action.START.ordinal());
         alarmIntent.putExtra("message", message);
+        alarmIntent.putExtra("alarm_id", alarmId);
         getBaseContext().startService(alarmIntent);
     }
 

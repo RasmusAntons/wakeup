@@ -200,4 +200,38 @@ public class WakeupApi {
             return false;
         }
     }
+
+    public boolean updateAlarmStatus(String alarmId, AlarmStatus status) {
+        Log.i(TAG, "updateAlarmStatus: called");
+        Uri.Builder uriBuilder = baseUri.buildUpon()
+                .appendPath("api")
+                .appendPath("alarms")
+                .appendPath(alarmId);
+        JSONObject alarmUpdate = new JSONObject();
+        try {
+            URL alarmEndpoint = new URL(uriBuilder.toString());
+            alarmUpdate.put("status", status.value);
+            Log.i(TAG, String.format("Url: %s", alarmEndpoint));
+            String response = apiCall(alarmEndpoint, "PATCH", alarmUpdate.toString());
+            Log.i(TAG, String.format("Response: %s", response));
+            return response != null;
+        } catch (JSONException | MalformedURLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public enum AlarmStatus {
+        NEW(1),
+        SENT(2),
+        RECEIVED(3),
+        COMPLETED(4),
+        FAILED(5);
+
+        public final int value;
+
+        AlarmStatus(int value) {
+            this.value = value;
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package de.rasmusantons.wakeup;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -256,6 +257,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private PendingIntent createPostAuthorizationIntent(
             @NonNull Context context,
             @NonNull AuthorizationRequest request,
@@ -265,7 +267,7 @@ public class LoginActivity extends AppCompatActivity {
             intent.putExtra(EXTRA_AUTH_SERVICE_DISCOVERY, discoveryDoc.docJson.toString());
         }
 
-        return PendingIntent.getActivity(context, request.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE);
+        return PendingIntent.getActivity(context, request.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     private AuthorizationServiceDiscovery getDiscoveryDocFromIntent(Intent intent) {

@@ -21,6 +21,7 @@ import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class AlarmService extends Service {
     private static final String TAG = "AlarmService";
@@ -34,7 +35,7 @@ public class AlarmService extends Service {
         return null;
     }
 
-    private void showNotification(String message) {
+    private void showNotification(String message, String alarmId) {
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationChannel channel = new NotificationChannel("wakeup_channel", "notification_channel_name", NotificationManager.IMPORTANCE_HIGH);
         nm.createNotificationChannel(channel);
@@ -47,6 +48,7 @@ public class AlarmService extends Service {
         Intent stopIntent = new Intent(this, AlarmService.class);
         stopIntent.putExtra("action", Action.STOP.ordinal());
         stopIntent.putExtra("notification_id", notificationId);
+        stopIntent.putExtra("alarm_id", alarmId);
         PendingIntent stopPendingIntent = PendingIntent.getService(this, notificationId + 2, stopIntent, PendingIntent.FLAG_IMMUTABLE);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "wakeup_channel")
@@ -82,10 +84,11 @@ public class AlarmService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         int action = intent.getIntExtra("action", -1);
-        Log.i(TAG, String.format("received action %d", action));
+        String alarmId = intent.getStringExtra("alarm_id");
+        Log.i(TAG, String.format("received action %d, alarmId=%s", action, alarmId));
         if (action == Action.START.ordinal()) {
             String message = intent.getStringExtra("message");
-            showNotification(message);
+            showNotification(message, alarmId);
             startAlarm();
         } else if (action == Action.STOP.ordinal()) {
             int notificationId = intent.getIntExtra("notification_id", 0);
@@ -94,6 +97,9 @@ public class AlarmService extends Service {
             notifications.remove(Integer.valueOf(notificationId));
             if (notifications.size() == 0 && ringtone != null)
                 ringtone.stop();
+            Executors.newSingleThreadExecutor().execute(() ->
+                    (new WakeupApi(getApplicationContext()))
+                            .updateAlarmStatus(alarmId, WakeupApi.AlarmStatus.COMPLETED));
         }
         return START_NOT_STICKY;
     }
