@@ -13,6 +13,7 @@
 				{% for device in user.devices.all %}
 					<span class="list-group-item d-flex justify-content-between align-items-start">
 						{{ device.name }}
+						{%if not device.fb_token %}<span class="badge rounded-pill bg-danger">no token</span>{% endif %}
 						<form method="post">
 							{% csrf_token %}
 							<input type="hidden" name="device" value="{{ device.id }}">
