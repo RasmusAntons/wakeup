@@ -70,13 +70,12 @@ class Alarm(models.Model):
         return self.Status(self.status).name
 
     @classmethod
-    def on_create(cls, sender, instance, created, *args, **kwargs):
-        if not created:
-            return
-        if send_alarm_to_user(instance.target, instance):
-            instance.status = Alarm.Status.SENT
-        else:
-            instance.status = Alarm.Status.FAILED
+    def on_create(cls, sender, instance, **kwargs):
+        if instance.status == Alarm.Status.NEW:
+            if send_alarm_to_user(instance.target, instance):
+                instance.status = Alarm.Status.SENT
+            else:
+                instance.status = Alarm.Status.FAILED
 
 
 pre_save.connect(Alarm.on_create, sender=Alarm)
