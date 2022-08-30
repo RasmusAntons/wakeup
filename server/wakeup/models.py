@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 from .validators import username_validators
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import pre_save
 from .fb_utils import send_alarm_to_user
 
 class User(AbstractUser):
@@ -70,14 +70,13 @@ class Alarm(models.Model):
         return self.Status(self.status).name
 
     @classmethod
-    def post_create(cls, sender, instance, created, *args, **kwargs):
+    def on_create(cls, sender, instance, created, *args, **kwargs):
         if not created:
             return
         if send_alarm_to_user(instance.target, instance):
             instance.status = Alarm.Status.SENT
         else:
             instance.status = Alarm.Status.FAILED
-        instance.save()
 
 
-post_save.connect(Alarm.post_create, sender=Alarm)
+pre_save.connect(Alarm.on_create, sender=Alarm)
