@@ -1,15 +1,17 @@
 package de.rasmusantons.wakeup;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.TextView;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
+import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.view.GravityCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -17,11 +19,9 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
 
 import org.json.JSONException;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import de.rasmusantons.wakeup.databinding.ActivityMainBinding;
 
@@ -45,26 +45,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.appBarMain.toolbar);
-        binding.appBarMain.fab.setOnClickListener(view -> {
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
-            Handler handler = new Handler(Looper.getMainLooper());
-            executorService.execute(() -> {
-                String fbToken = getSharedPreferences("firebase", MODE_PRIVATE)
-                        .getString("fb_token", null);
-                Log.i(TAG, String.format("using fbToken: %s", fbToken));
-                String ownDeviceId = (new WakeupApi(MainActivity.this)).getOwnDeviceUrl(fbToken);
-                handler.post(() -> {
-                    Snackbar.make(view, String.format("ownDeviceId=%s", ownDeviceId), Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
-                });
-            });
-        });
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_settings)
+                R.id.nav_home, R.id.nav_website, R.id.nav_settings)
                 .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -75,6 +61,12 @@ public class MainActivity extends AppCompatActivity {
             if (!handled) {
                 if (item.getItemId() == R.id.nav_login) {
                     login();
+                } else if (item.getItemId() == R.id.nav_website) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                    String wakeupUrl = prefs.getString(getString(R.string.wakeup_server_url), "https://wakeup.3po.ch");
+                    CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+                    CustomTabsIntent customTabsIntent = builder.build();
+                    customTabsIntent.launchUrl(this, Uri.parse(wakeupUrl));
                 }
             }
             drawer.closeDrawer(GravityCompat.START);

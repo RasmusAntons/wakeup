@@ -41,6 +41,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -114,10 +115,7 @@ public class LoginActivity extends AppCompatActivity {
                     requestAuthorization();
                 }
             } else {
-                // if (mAuthState == null)
-                //     requestAuthorization();
-                // else
-                    finish();
+                finish();
             }
         } else {
             Log.d(TAG, "NO Intent received");
@@ -144,20 +142,14 @@ public class LoginActivity extends AppCompatActivity {
         if (!authorizationLock.tryLock())
             Log.e(TAG, "authorization lock was already locked");
         final AuthorizationServiceConfiguration.RetrieveConfigurationCallback retrieveCallback =
-                new AuthorizationServiceConfiguration.RetrieveConfigurationCallback() {
-                    @Override
-                    public void onFetchConfigurationCompleted(
-                            @Nullable AuthorizationServiceConfiguration serviceConfiguration,
-                            @Nullable AuthorizationException ex) {
-                        if (ex != null) {
-                            Log.w(TAG, "Failed to retrieve configuration for " + OIDC_ISSUER, ex);
-                        } else {
-                            Log.d(TAG, "configuration retrieved for " + OIDC_ISSUER
-                                    + ", proceeding");
-                            authorize(serviceConfiguration);
-                        }
-                        finish();
+                (serviceConfiguration, ex) -> {
+                    if (ex != null) {
+                        Log.w(TAG, "Failed to retrieve configuration for " + OIDC_ISSUER, ex);
+                    } else {
+                        Log.d(TAG, "configuration retrieved for " + OIDC_ISSUER + ", proceeding");
+                        authorize(serviceConfiguration);
                     }
+                    finish();
                 };
         String discoveryEndpoint = OIDC_ISSUER + "/.well-known/openid-configuration/";
         AuthorizationServiceConfiguration.fetchFromUrl(Uri.parse(discoveryEndpoint), retrieveCallback);
@@ -173,43 +165,40 @@ public class LoginActivity extends AppCompatActivity {
         if (mAuthState.getAuthorizationServiceConfiguration() == null) {
             Log.e(TAG, "Cannot make userInfo request without service configuration");
         }
-        mAuthState.performActionWithFreshTokens(mAuthService, new AuthState.AuthStateAction() {
-            @Override
-            public void execute(String accessToken, String idToken, AuthorizationException ex) {
-                if (ex != null) {
-                    Log.e(TAG, "Token refresh failed when fetching user info");
-                    return;
-                }
-                AuthorizationServiceDiscovery discoveryDoc = getDiscoveryDocFromIntent(getIntent());
-                if (discoveryDoc == null) {
-                    throw new IllegalStateException("no available discovery doc");
-                }
-                URL userInfoEndpoint;
-                try {
-                    userInfoEndpoint = new URL(discoveryDoc.getUserinfoEndpoint().toString());
-                } catch (MalformedURLException urlEx) {
-                    Log.e(TAG, "Failed to construct user info endpoint URL", urlEx);
-                    return;
-                }
-                InputStream userInfoResponse = null;
-                try {
-                    HttpURLConnection conn = (HttpURLConnection) userInfoEndpoint.openConnection();
-                    conn.setRequestProperty("Authorization", "Bearer " + accessToken);
-                    conn.setInstanceFollowRedirects(false);
-                    userInfoResponse = conn.getInputStream();
-                    String response = readStream(userInfoResponse);
-                    updateUserInfo(new JSONObject(response));
-                } catch (IOException ioEx) {
-                    Log.e(TAG, "Network error when querying userinfo endpoint", ioEx);
-                } catch (JSONException jsonEx) {
-                    Log.e(TAG, "Failed to parse userinfo response");
-                } finally {
-                    if (userInfoResponse != null) {
-                        try {
-                            userInfoResponse.close();
-                        } catch (IOException ioEx) {
-                            Log.e(TAG, "Failed to close userinfo response stream", ioEx);
-                        }
+        mAuthState.performActionWithFreshTokens(mAuthService, (accessToken, idToken, ex) -> {
+            if (ex != null) {
+                Log.e(TAG, "Token refresh failed when fetching user info");
+                return;
+            }
+            AuthorizationServiceDiscovery discoveryDoc = getDiscoveryDocFromIntent(getIntent());
+            if (discoveryDoc == null) {
+                throw new IllegalStateException("no available discovery doc");
+            }
+            URL userInfoEndpoint;
+            try {
+                userInfoEndpoint = new URL(Objects.requireNonNull(discoveryDoc.getUserinfoEndpoint()).toString());
+            } catch (MalformedURLException urlEx) {
+                Log.e(TAG, "Failed to construct user info endpoint URL", urlEx);
+                return;
+            }
+            InputStream userInfoResponse = null;
+            try {
+                HttpURLConnection conn = (HttpURLConnection) userInfoEndpoint.openConnection();
+                conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+                conn.setInstanceFollowRedirects(false);
+                userInfoResponse = conn.getInputStream();
+                String response = readStream(userInfoResponse);
+                updateUserInfo(new JSONObject(response));
+            } catch (IOException ioEx) {
+                Log.e(TAG, "Network error when querying userinfo endpoint", ioEx);
+            } catch (JSONException jsonEx) {
+                Log.e(TAG, "Failed to parse userinfo response");
+            } finally {
+                if (userInfoResponse != null) {
+                    try {
+                        userInfoResponse.close();
+                    } catch (IOException ioEx) {
+                        Log.e(TAG, "Failed to close userinfo response stream", ioEx);
                     }
                 }
             }
@@ -276,7 +265,7 @@ public class LoginActivity extends AppCompatActivity {
             intent.putExtra(EXTRA_AUTH_SERVICE_DISCOVERY, discoveryDoc.docJson.toString());
         }
 
-        return PendingIntent.getActivity(context, request.hashCode(), intent, 0);
+        return PendingIntent.getActivity(context, request.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE);
     }
 
     private AuthorizationServiceDiscovery getDiscoveryDocFromIntent(Intent intent) {
@@ -292,31 +281,28 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void updateUserInfo(final JSONObject jsonObject) {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                infoText.append(String.format("received userinfo: %s\n", jsonObject));
-                Log.d(TAG, String.format("received userinfo: %s\n", jsonObject));
-                mUserInfoJson = jsonObject;
-                if (jsonObject != null) {
-                    SharedPreferences authPrefs = getSharedPreferences("auth", MODE_PRIVATE);
-                    authPrefs.edit().putString(KEY_USER_INFO, jsonObject.toString()).apply();
-                    authorizationLock.unlock();
+        new Handler(Looper.getMainLooper()).post(() -> {
+            infoText.append(String.format("received userinfo: %s\n", jsonObject));
+            Log.d(TAG, String.format("received userinfo: %s\n", jsonObject));
+            mUserInfoJson = jsonObject;
+            if (jsonObject != null) {
+                SharedPreferences authPrefs = getSharedPreferences("auth", MODE_PRIVATE);
+                authPrefs.edit().putString(KEY_USER_INFO, jsonObject.toString()).apply();
+                authorizationLock.unlock();
 
-                    SharedPreferences firebasePreferences = getSharedPreferences("firebase", MODE_PRIVATE);
-                    if (firebasePreferences.getBoolean("fb_token_updated", false)) {
-                        String fbToken = firebasePreferences.getString("fb_token", null);
-                        Log.i(TAG, String.format("need to update firebase token: %s", fbToken));
-                        Executors.newSingleThreadExecutor().execute(() -> {
-                            (new WakeupApi(LoginActivity.this)).updateFbToken(fbToken);
-                            firebasePreferences.edit()
-                                    .putBoolean("fb_token_updated", false)
-                                    .apply();
-                        });
-                    }
-
-                    finish();
+                SharedPreferences firebasePreferences = getSharedPreferences("firebase", MODE_PRIVATE);
+                if (firebasePreferences.getBoolean("fb_token_updated", false)) {
+                    String fbToken = firebasePreferences.getString("fb_token", null);
+                    Log.i(TAG, String.format("need to update firebase token: %s", fbToken));
+                    Executors.newSingleThreadExecutor().execute(() -> {
+                        (new WakeupApi(LoginActivity.this)).updateFbToken(fbToken);
+                        firebasePreferences.edit()
+                                .putBoolean("fb_token_updated", false)
+                                .apply();
+                    });
                 }
+
+                finish();
             }
         });
     }
