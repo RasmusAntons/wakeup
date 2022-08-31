@@ -37,7 +37,7 @@ public class WakeupApi {
     public WakeupApi(Context context) {
         this.context = context;
         String wakeupServerUrl = PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(context.getString(R.string.wakeup_server_url), null);
+                .getString(context.getString(R.string.wakeup_server_url), context.getString(R.string.default_wakeup_server_url));
         baseUri = Uri.parse(wakeupServerUrl);
     }
 

@@ -6,7 +6,7 @@
         <EditTextPreference
             app:key="@string/wakeup_server_url"
             app:title="@string/wakeup_server_url_title"
-            app:defaultValue="https://wakeup.3po.ch"
+            app:defaultValue="@string/default_wakeup_server_url"
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>

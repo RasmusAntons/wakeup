@@ -11,11 +11,12 @@ android {
         minSdk 27
         targetSdk 32
         versionCode 1
-        versionName "1.0"
+        versionName "0.0.4"
         manifestPlaceholders = [
                 appAuthRedirectScheme: 'de.rasmusantons.wakeup'
         ]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        setProperty("archivesBaseName", "wakeup-$versionName")
     }
 
     buildTypes {

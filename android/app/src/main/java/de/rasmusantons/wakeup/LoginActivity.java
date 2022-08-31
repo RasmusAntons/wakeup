@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.StrictMode;
@@ -13,11 +14,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
 
 import net.openid.appauth.AuthState;
 import net.openid.appauth.AuthorizationException;
@@ -54,7 +55,7 @@ public class LoginActivity extends AppCompatActivity {
     // IDP Configuration
 
     // The OIDC issuer from which the configuration will be discovered. This is your base PingFederate server URL.
-    private static final String OIDC_ISSUER = "https://wakeup-dev.3po.ch/o";
+    private String oidcIssuer;
 
     // The OAuth client ID. This is configured in your PingFederate administration console under OAuth Settings > Client Management.
     // The example "ac_client" from the OAuth playground can be used here.
@@ -140,19 +141,23 @@ public class LoginActivity extends AppCompatActivity {
     // button action handlers
     public void requestAuthorization() {
         infoText.append("requesting authorization\n");
+        String wakeupServerUrl = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .getString(getString(R.string.wakeup_server_url), getString(R.string.default_wakeup_server_url));
+        Uri.Builder uriBuilder = Uri.parse(wakeupServerUrl).buildUpon().appendPath("o");
+        oidcIssuer = uriBuilder.toString();
         if (!authorizationLock.tryLock())
             Log.e(TAG, "authorization lock was already locked");
         final AuthorizationServiceConfiguration.RetrieveConfigurationCallback retrieveCallback =
                 (serviceConfiguration, ex) -> {
                     if (ex != null) {
-                        Log.w(TAG, "Failed to retrieve configuration for " + OIDC_ISSUER, ex);
+                        Log.w(TAG, "Failed to retrieve configuration for " + oidcIssuer, ex);
                     } else {
-                        Log.d(TAG, "configuration retrieved for " + OIDC_ISSUER + ", proceeding");
+                        Log.d(TAG, "configuration retrieved for " + oidcIssuer + ", proceeding");
                         authorize(serviceConfiguration);
                     }
                     finish();
                 };
-        String discoveryEndpoint = OIDC_ISSUER + "/.well-known/openid-configuration/";
+        String discoveryEndpoint = oidcIssuer + "/.well-known/openid-configuration/";
         AuthorizationServiceConfiguration.fetchFromUrl(Uri.parse(discoveryEndpoint), retrieveCallback);
     }
 
@@ -267,7 +272,8 @@ public class LoginActivity extends AppCompatActivity {
             intent.putExtra(EXTRA_AUTH_SERVICE_DISCOVERY, discoveryDoc.docJson.toString());
         }
 
-        return PendingIntent.getActivity(context, request.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        int flags = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ? PendingIntent.FLAG_MUTABLE : 0;
+        return PendingIntent.getActivity(context, request.hashCode(), intent, flags);
     }
 
     private AuthorizationServiceDiscovery getDiscoveryDocFromIntent(Intent intent) {

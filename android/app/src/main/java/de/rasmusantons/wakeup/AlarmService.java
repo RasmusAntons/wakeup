@@ -52,14 +52,14 @@ public class AlarmService extends Service {
         PendingIntent stopPendingIntent = PendingIntent.getService(this, notificationId + 2, stopIntent, PendingIntent.FLAG_IMMUTABLE);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "wakeup_channel")
-                .setSmallIcon(R.drawable.ic_menu_camera)
+                .setSmallIcon(R.drawable.ic_fire_alarm_box)
                 .setContentTitle("Wake Up!")
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setSilent(true)
                 .setAutoCancel(false)
-                .addAction(R.drawable.ic_menu_camera, "stop", stopPendingIntent);
+                .addAction(R.drawable.ic_fire_alarm_box, "stop", stopPendingIntent);
 
         notifications.add(notificationId);
         nm.notify(notificationId, builder.build());

@@ -28,4 +28,5 @@
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="wakeup_alarm_sound">wakeup_alarm_sound</string>
     <string name="wakeup_server_url">wakeup_server_url</string>
+    <string name="default_wakeup_server_url">https://wakeup.3po.ch</string>
 </resources>
