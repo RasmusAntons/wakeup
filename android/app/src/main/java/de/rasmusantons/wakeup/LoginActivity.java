@@ -299,16 +299,14 @@ public class LoginActivity extends AppCompatActivity {
                 authorizationLock.unlock();
 
                 SharedPreferences firebasePreferences = getSharedPreferences("firebase", MODE_PRIVATE);
-                if (firebasePreferences.getBoolean("fb_token_updated", false)) {
-                    String fbToken = firebasePreferences.getString("fb_token", null);
-                    Log.i(TAG, String.format("need to update firebase token: %s", fbToken));
-                    Executors.newSingleThreadExecutor().execute(() -> {
-                        (new WakeupApi(LoginActivity.this)).updateFbToken(fbToken);
-                        firebasePreferences.edit()
-                                .putBoolean("fb_token_updated", false)
-                                .apply();
-                    });
-                }
+                String fbToken = firebasePreferences.getString("fb_token", null);
+                Log.i(TAG, String.format("need to update firebase token: %s", fbToken));
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    (new WakeupApi(LoginActivity.this)).updateFbToken(fbToken);
+                    firebasePreferences.edit()
+                            .putBoolean("fb_token_updated", false)
+                            .apply();
+                });
 
                 finish();
             }

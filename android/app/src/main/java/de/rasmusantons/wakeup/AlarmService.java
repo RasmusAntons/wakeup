@@ -66,6 +66,8 @@ public class AlarmService extends Service {
     }
 
     private void startAlarm() {
+        if (!ringtone.isPlaying())
+            ringtone = null;
         if (ringtone == null) {
             RingtoneManager rm = new RingtoneManager(this);
             rm.setType(RingtoneManager.TYPE_ALARM);
@@ -95,8 +97,10 @@ public class AlarmService extends Service {
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             nm.cancel(notificationId);
             notifications.remove(Integer.valueOf(notificationId));
-            if (notifications.size() == 0 && ringtone != null)
+            if (notifications.size() == 0 && ringtone != null) {
                 ringtone.stop();
+                ringtone = null;
+            }
             Executors.newSingleThreadExecutor().execute(() ->
                     (new WakeupApi(getApplicationContext()))
                             .updateAlarmStatus(alarmId, WakeupApi.AlarmStatus.COMPLETED));
